@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Gadget Glow - AI-Powered E-Commerce Platform
 
 A production-ready, full-stack Django AI-powered e-commerce web application for mobile accessories. Built with enterprise-level architecture, security, and scalability.
@@ -311,3 +312,7 @@ MIT
 
 ## Author
 Built with Django, DRF, OpenAI, and enterprise best practices.
+=======
+# Gadget_Glow
+Mobile Accessories Project
+>>>>>>> 5d98f01560a45e83fbc8c871c38a39656bc9a618
