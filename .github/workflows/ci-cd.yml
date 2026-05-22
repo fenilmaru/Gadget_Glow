@@ -1,0 +1,92 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install flake8 black
+          pip install -r requirements.txt
+      - name: Lint with flake8
+        run: flake8 . --max-line-length=120 --exclude=venv,migrations,__pycache__
+      - name: Check formatting with black
+        run: black --check --line-length=120 .
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: gadget_glow_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Run migrations
+        run: |
+          python manage.py makemigrations
+          python manage.py migrate
+        env:
+          DJANGO_SECRET_KEY: test-secret-key
+          DJANGO_DEBUG: 'False'
+          DB_ENGINE: django.db.backends.postgresql
+          DB_NAME: gadget_glow_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: localhost
+          DB_PORT: 5432
+          REDIS_URL: redis://localhost:6379/0
+      - name: Run tests
+        run: pytest --cov=. --cov-report=xml -v
+        env:
+          DJANGO_SECRET_KEY: test-secret-key
+          DJANGO_DEBUG: 'False'
+          DB_ENGINE: django.db.backends.postgresql
+          DB_NAME: gadget_glow_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: localhost
+          DB_PORT: 5432
+          REDIS_URL: redis://localhost:6379/0
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml

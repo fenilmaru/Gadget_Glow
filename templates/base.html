@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gadget Glow - Premium Mobile Accessories{% endblock %}</title>
+    <meta name="description" content="{% block meta_desc %}Premium mobile accessories at unbeatable prices. Shop phone cases, chargers, earphones, smartwatches and more.{% endblock %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/darkmode.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/lightning-bolt.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/48/lightning-bolt.png">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% include 'navbar.html' %}
+
+    {% if messages %}
+    <div class="toast-container">
+        {% for message in messages %}
+        <div class="custom-toast {{ message.tags }}">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% elif message.tags == 'error' %}exclamation-circle-fill{% else %}info-circle-fill{% endif %}"></i>
+                <span>{{ message }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <script>setTimeout(function(){document.querySelectorAll('.custom-toast').forEach(function(t){t.remove()})},4000);</script>
+    {% endif %}
+
+    <div class="main-content" style="padding-top: 80px;">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% if user.is_authenticated %}
+    <button class="chatbot-toggle" id="chatbotToggle" title="AI Assistant">
+        <i class="bi bi-robot"></i>
+        <span class="chatbot-status-dot"></span>
+    </button>
+    <div class="chatbot-panel" id="chatbotPanel">
+        <div class="chatbot-header">
+            <h6><i class="bi bi-robot"></i> AI Assistant</h6>
+            <button class="btn-close-chat" id="chatbotClose"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="chat-message bot">
+                Hi! I'm Gadget Glow AI Assistant. How can I help you today? Try asking about products, orders, or recommendations!
+            </div>
+        </div>
+        <div class="chatbot-quick-replies" id="chatbotQuickReplies">
+            <button class="qr-btn" data-query="Show me trending products">Trending</button>
+            <button class="qr-btn" data-query="Best headphones under ₹100">Headphones</button>
+            <button class="qr-btn" data-query="Track my order">Track Order</button>
+            <button class="qr-btn" data-query="Latest deals and offers">Deals</button>
+        </div>
+        <div class="chatbot-input">
+            <button class="btn-voice" id="voiceInput" title="Voice input"><i class="bi bi-mic"></i></button>
+            <input type="text" id="chatbotInput" placeholder="Ask me anything..." autocomplete="off">
+            <button class="btn-send" id="chatbotSend"><i class="bi bi-send-fill"></i></button>
+        </div>
+    </div>
+    {% endif %}
+
+    {% include 'footer.html' %}
+    {% if user.is_authenticated %}
+    <nav class="mobile-bottom-nav">
+        <a href="{% url 'home' %}" class="mob-nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+            <i class="bi bi-house-door-fill"></i><span>Home</span>
+        </a>
+        <a href="{% url 'products_page' %}" class="mob-nav-item {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-grid-fill"></i><span>Products</span>
+        </a>
+        <a href="{% url 'cart_page' %}" class="mob-nav-item {% if request.resolver_match.url_name == 'cart_page' %}active{% endif %}">
+            <i class="bi bi-cart3"></i><span>Cart</span>
+            {% if cart_count > 0 %}<span class="mob-badge">{{ cart_count }}</span>{% endif %}
+        </a>
+        <a href="{% url 'wishlist_page' %}" class="mob-nav-item {% if request.resolver_match.url_name == 'wishlist_page' %}active{% endif %}">
+            <i class="bi bi-heart"></i><span>Wishlist</span>
+        </a>
+        <a href="{% url 'profile_page' %}" class="mob-nav-item {% if request.resolver_match.url_name == 'profile_page' %}active{% endif %}">
+            <i class="bi bi-person-fill"></i><span>Profile</span>
+        </a>
+    </nav>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/theme.js' %}"></script>
+    <script src="{% static 'js/chatbot.js' %}"></script>
+    <script src="{% static 'js/cart.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+
+    {% if user.is_authenticated and not user.is_staff %}
+    <script>
+    (function(){
+        try {
+            var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            var socket = new WebSocket(protocol + '//' + window.location.host + '/ws/notifications/');
+            socket.onmessage = function(e) {
+                var data = JSON.parse(e.data);
+                if (data.type === 'new_notification') {
+                    var badge = document.getElementById('nav-notif-count');
+                    if (badge) { badge.textContent = parseInt(badge.textContent) + 1; badge.style.display = ''; }
+                } else if (data.type === 'unread_count') {
+                    var badge = document.getElementById('nav-notif-count');
+                    if (badge) {
+                        if (data.count > 0) { badge.textContent = data.count; badge.style.display = ''; }
+                        else { badge.style.display = 'none'; }
+                    }
+                }
+            };
+        } catch(e) {}
+    })();
+    </script>
+    {% endif %}
+</body>
+</html>

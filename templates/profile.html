@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}My Profile - Gadget Glow{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h1 class="fw-bold mb-4"><i class="bi bi-person-circle me-2" style="color: var(--primary-light);"></i>My Profile</h1>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="rounded-3 p-4" style="background: var(--bg-card); border: 1px solid var(--border);">
+                <h5 class="fw-bold mb-4"><i class="bi bi-pencil me-2" style="color: var(--primary-light);"></i>Edit Profile</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">First Name</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Email</label>
+                            <input type="email" name="email" class="form-control" value="{{ user.email }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Phone</label>
+                            <input type="text" name="phone" class="form-control" value="{{ profile.phone|default:'' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Address</label>
+                            <textarea name="address" class="form-control" rows="3">{{ profile.address|default:'' }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-gradient"><i class="bi bi-check2 me-1"></i>Update Profile</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="rounded-3 p-4 mt-4" style="background: var(--bg-card); border: 1px solid var(--border);">
+                <h5 class="fw-bold mb-4"><i class="bi bi-shield-lock me-2" style="color: var(--primary-light);"></i>Change Password</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Current Password</label>
+                            <input type="password" name="current_password" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">New Password</label>
+                            <input type="password" name="new_password" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-outline-glow"><i class="bi bi-key me-1"></i>Change Password</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="rounded-3 p-4" style="background: var(--bg-card); border: 1px solid var(--border);">
+                <h5 class="fw-bold mb-3">Account Info</h5>
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <small class="text-muted d-block">Username</small>
+                        <strong>{{ user.username }}</strong>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Email</small>
+                        <strong>{{ user.email|default:"Not set" }}</strong>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Phone</small>
+                        <strong>{{ profile.phone|default:"Not set" }}</strong>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Joined</small>
+                        <strong>{{ user.date_joined|date:"M Y" }}</strong>
+                    </div>
+                </div>
+                <hr style="border-color: var(--border);">
+                <a href="{% url 'orders_page' %}" class="btn btn-outline-glow w-100"><i class="bi bi-box me-1"></i> My Orders</a>
+                <a href="{% url 'wishlist_page' %}" class="btn btn-outline-glow w-100 mt-2"><i class="bi bi-heart me-1"></i> Wishlist</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

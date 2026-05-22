@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Admin Dashboard - Gadget Glow{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <h1 class="fw-bold"><i class="bi bi-speedometer2 me-2" style="color: var(--primary-light);"></i>Admin Dashboard</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'admin_categories' %}" class="btn btn-outline-glow btn-sm"><i class="bi bi-grid me-1"></i> Categories</a>
+            <a href="{% url 'admin_products' %}" class="btn btn-outline-glow btn-sm"><i class="bi bi-box me-1"></i> Products</a>
+            <a href="/admin/" class="btn btn-outline-glow btn-sm"><i class="bi bi-shield-lock me-1"></i> Django Admin</a>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(37,99,235,0.1); color: var(--primary-light);"><i class="bi bi-box"></i></div>
+                <div class="stat-value">{{ total_products }}</div>
+                <div class="stat-label">Products</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(14,165,233,0.1); color: var(--sky);"><i class="bi bi-cart-check"></i></div>
+                <div class="stat-value">{{ total_orders }}</div>
+                <div class="stat-label">Orders</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(59,130,246,0.1); color: var(--accent-light);"><i class="bi bi-people"></i></div>
+                <div class="stat-value">{{ total_users }}</div>
+                <div class="stat-label">Users</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(245,158,11,0.1); color: var(--warning);"><i class="bi bi-currency-dollar"></i></div>
+                <div class="stat-value">₹{{ total_revenue|floatformat:0 }}</div>
+                <div class="stat-label">Revenue</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="rounded-3 p-3" style="background:var(--bg-card);border:1px solid var(--border)">
+                <h5 class="fw-bold mb-3"><i class="bi bi-lightning me-2" style="color:var(--primary-light)"></i>Quick Actions</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'admin_product_add' %}" class="btn btn-gradient btn-sm"><i class="bi bi-plus-lg me-1"></i>Add Product</a>
+                    <a href="{% url 'admin_category_add' %}" class="btn btn-outline-glow btn-sm"><i class="bi bi-plus-lg me-1"></i>Add Category</a>
+                    <a href="{% url 'admin_products' %}?status=low_stock" class="btn btn-outline-glow btn-sm" style="color:var(--warning)"><i class="bi bi-exclamation-triangle me-1"></i>Low Stock ({{ low_stock_products }})</a>
+                    <a href="{% url 'admin_products' %}?status=out_of_stock" class="btn btn-outline-glow btn-sm" style="color:var(--danger)"><i class="bi bi-x-circle me-1"></i>Out of Stock</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(239,68,68,0.1); color: var(--danger);"><i class="bi bi-clock"></i></div>
+                <div class="stat-value">{{ pending_orders }}</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(245,158,11,0.1); color: var(--warning);"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="stat-value">{{ low_stock_products }}</div>
+                <div class="stat-label">Low Stock</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(37,99,235,0.1); color: var(--primary-light);"><i class="bi bi-graph-up"></i></div>
+                <div class="stat-value">₹{{ weekly_revenue|floatformat:0 }}</div>
+                <div class="stat-label">Weekly Revenue</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(14,165,233,0.1); color: var(--sky);"><i class="bi bi-person-plus"></i></div>
+                <div class="stat-value">{{ new_users_month }}</div>
+                <div class="stat-label">New Users</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Overview -->
+    <div class="rounded-3 p-4 mb-4" style="background:var(--bg-card);border:1px solid var(--border)">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-grid me-2" style="color:var(--primary-light)"></i>Categories</h5>
+            <a href="{% url 'admin_categories' %}" class="btn btn-gradient btn-sm">Manage <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="row g-2">
+            {% for cat in categories %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="{% url 'admin_products' %}?category={{ cat.id }}" class="text-decoration-none">
+                    <div class="d-flex align-items-center gap-2 p-2 rounded-2" style="background:var(--bg-surface);transition:var(--transition)" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background='var(--bg-surface)'">
+                        <img src="{{ cat.get_image_url }}" alt="" style="width:36px;height:36px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">
+                        <div>
+                            <div class="small fw-semibold">{{ cat.name }}</div>
+                            <div class="text-muted" style="font-size:0.65rem">{{ cat.pcount }} products</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="rounded-3 p-4" style="background: var(--bg-card); border: 1px solid var(--border);">
+                <h5 class="fw-bold mb-3"><i class="bi bi-truck me-2" style="color: var(--primary-light);"></i>Recent Orders</h5>
+                {% if recent_orders %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Status</th></tr></thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>#{{ order.id }}</td>
+                                <td>{{ order.user.username }}</td>
+                                <td>₹{{ order.total_price }}</td>
+                                <td><span class="badge rounded-pill px-2 py-1 {% if order.status == 'delivered' %}bg-success{% elif order.status == 'pending' %}bg-warning text-dark{% elif order.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">{{ order.status|title }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}<p class="text-muted text-center py-3">No orders</p>{% endif %}
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="rounded-3 p-4" style="background: var(--bg-card); border: 1px solid var(--border);">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-box me-2" style="color: var(--primary-light);"></i>Recent Products</h5>
+                    <a href="{% url 'admin_products' %}" class="btn btn-gradient btn-sm">View All <i class="bi bi-arrow-right"></i></a>
+                </div>
+                {% if products %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th></tr></thead>
+                        <tbody>
+                            {% for prod in products %}
+                            <tr>
+                                <td>{{ prod.name|truncatechars:25 }}</td>
+                                <td><span class="badge rounded-pill" style="background:rgba(37,99,235,0.1);color:var(--primary-light);font-size:0.65rem">{{ prod.category.name|default:"-" }}</span></td>
+                                <td>₹{{ prod.price }}</td>
+                                <td><span class="badge rounded-pill px-2 py-1 {% if prod.stock > 10 %}bg-success{% elif prod.stock > 0 %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ prod.stock }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}<p class="text-muted text-center py-3">No products</p>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

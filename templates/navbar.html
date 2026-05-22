@@ -1,0 +1,100 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-dark navbar-gadget fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}">
+            <i class="bi bi-lightning-charge-fill" style="color: var(--primary-light); font-size: 1.5rem;"></i>
+            <span class="brand-text">Gadget Glow</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">Home</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {% if 'product' in request.resolver_match.url_name %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                        Categories
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="{% url 'products_page' %}">All Products</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% for cat in categories %}
+                        <li><a class="dropdown-item" href="{% url 'products_page' %}?category={{ cat.id }}">{{ cat.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li class="nav-item"><a class="nav-link {% if 'product' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'products_page' %}">Products</a></li>
+                {% if user.is_authenticated and not user.is_staff %}
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'orders_page' %}active{% endif %}" href="{% url 'orders_page' %}">My Orders</a></li>
+                {% endif %}
+                {% if user.is_staff %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-gear"></i> Admin
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_categories' %}"><i class="bi bi-grid me-2"></i>Categories</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_products' %}"><i class="bi bi-box me-2"></i>Products</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/admin/"><i class="bi bi-shield-lock me-2"></i>Django Admin</a></li>
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
+            {% if user.is_authenticated and not user.is_staff %}
+            <div class="search-bar me-3 d-none d-md-block">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="liveSearch" placeholder="Search products..." autocomplete="off">
+                <div class="search-results-dropdown" id="searchResults"></div>
+            </div>
+            {% endif %}
+            <div class="d-flex align-items-center gap-2">
+                <button class="theme-toggle-btn" id="themeToggle" title="Toggle theme">
+                    <i class="bi bi-moon-fill"></i>
+                </button>
+                {% if user.is_authenticated and not user.is_staff %}
+                <a href="{% url 'notifications_page' %}" class="nav-icon-btn" title="Notifications">
+                    <i class="bi bi-bell"></i>
+                    {% if unread_notifications > 0 %}
+                    <span class="nav-badge-count" id="nav-notif-count">{{ unread_notifications }}</span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'wishlist_page' %}" class="nav-icon-btn" title="Wishlist"><i class="bi bi-heart"></i></a>
+                <a href="{% url 'cart_page' %}" class="nav-icon-btn" title="Cart">
+                    <i class="bi bi-cart3"></i>
+                    {% if cart_count > 0 %}
+                    <span class="nav-badge-count" id="cartCount">{{ cart_count }}</span>
+                    {% endif %}
+                </a>
+                {% elif user.is_authenticated and user.is_staff %}
+                <a href="{% url 'admin_dashboard' %}" class="btn btn-gradient btn-sm"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+                {% else %}
+                <a href="{% url 'login' %}" class="btn btn-outline-glow btn-sm rounded-pill px-3">Sign In</a>
+                <a href="{% url 'register' %}" class="btn btn-gradient btn-sm rounded-pill px-3">Register</a>
+                {% endif %}
+                {% if user.is_authenticated %}
+                <div class="dropdown">
+                    <a href="#" class="btn btn-outline-glow btn-sm rounded-pill px-3 d-flex align-items-center gap-2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i>
+                        <span>{{ user.username|truncatechars:10 }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'profile_page' %}"><i class="bi bi-person me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item" href="{% url 'orders_page' %}"><i class="bi bi-box me-2"></i>Orders</a></li>
+                        <li><a class="dropdown-item" href="{% url 'wishlist_page' %}"><i class="bi bi-heart me-2"></i>Wishlist</a></li>
+                        {% if user.is_staff %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_categories' %}"><i class="bi bi-grid me-2"></i>Categories</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_products' %}"><i class="bi bi-box me-2"></i>Products</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>

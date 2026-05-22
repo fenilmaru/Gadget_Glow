@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: gadget_glow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    command: gunicorn Gadget_Glow.wsgi:application --bind 0.0.0.0:8000 --workers 4 --threads 2 --timeout 120
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - logs_volume:/app/logs
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery:
+    build: .
+    command: celery -A Gadget_Glow worker -l info
+    volumes:
+      - .:/app
+      - logs_volume:/app/logs
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery-beat:
+    build: .
+    command: celery -A Gadget_Glow beat -l info
+    volumes:
+      - .:/app
+      - logs_volume:/app/logs
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.25-alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - static_volume:/static
+      - media_volume:/media
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:
+  logs_volume:

@@ -1,0 +1,49 @@
+[data-theme="dark"] {
+    --bg-body: #0d1117;
+    --bg-card: #161b22;
+    --bg-surface: #1c2333;
+    --bg-elevated: #21262d;
+    --text: #f0f0f0;
+    --text-secondary: #8b949e;
+    --text-muted: #6b7280;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-light: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] {
+    --bg-body: #f0f4f8;
+    --bg-card: #ffffff;
+    --bg-surface: #e2e8f0;
+    --bg-elevated: #f0f4f8;
+    --text: #1a1a2e;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: rgba(0, 0, 0, 0.08);
+    --border-light: rgba(0, 0, 0, 0.12);
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="light"] .navbar-gadget .nav-link:hover,
+[data-theme="light"] .navbar-gadget .nav-link.active {
+    background: rgba(37, 99, 235, 0.06);
+}
+[data-theme="light"] .product-card .card-img-container {
+    background: linear-gradient(135deg, rgba(37,99,235,0.04), rgba(14,165,233,0.04));
+}
+[data-theme="light"] .chat-message.bot {
+    background: #f0f4f8;
+}
+[data-theme="light"] .badge-discount {
+    box-shadow: 0 4px 12px rgba(225, 112, 85, 0.2);
+}
+[data-theme="light"] .form-control.bg-dark {
+    background: #f0f4f8 !important;
+    color: #1a1a2e !important;
+}
+[data-theme="light"] .form-select.bg-dark {
+    background-color: #f0f4f8 !important;
+    color: #1a1a2e !important;
+}

@@ -1,0 +1,471 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Checkout - Gadget Glow{% endblock %}
+{% block extra_css %}
+<style>
+:root { --glass-bg: rgba(255,255,255,0.04); --glass-border: rgba(255,255,255,0.08); --glass-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+[data-theme="light"] { --glass-bg: rgba(0,0,0,0.03); --glass-border: rgba(0,0,0,0.08); --glass-shadow: 0 8px 32px rgba(0,0,0,0.06); }
+.checkout-container { max-width: 1320px; margin: 0 auto; }
+.progress-steps { display: flex; justify-content: center; gap: 0; margin-bottom: 2.5rem; position: relative; }
+.progress-steps::before { content: ''; position: absolute; top: 24px; left: 10%; right: 10%; height: 2px; background: var(--border); z-index: 0; }
+.progress-steps .step { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; z-index: 1; flex: 1; }
+.progress-steps .step .circle { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; background: var(--bg-card); border: 2px solid var(--border); color: var(--text-muted); transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
+.progress-steps .step.active .circle { border-color: var(--primary-light); background: rgba(99,102,241,0.15); color: var(--primary-light); box-shadow: 0 0 20px rgba(99,102,241,0.3); }
+.progress-steps .step.done .circle { border-color: var(--success); background: var(--success); color: #fff; box-shadow: 0 0 20px rgba(34,197,94,0.3); }
+.progress-steps .step .label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+.progress-steps .step.active .label { color: var(--primary-light); }
+.progress-steps .step.done .label { color: var(--success); }
+.glass-card { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 1.75rem; box-shadow: var(--glass-shadow); transition: all 0.3s ease; }
+.glass-card:hover { border-color: rgba(99,102,241,0.2); box-shadow: 0 8px 40px rgba(99,102,241,0.08); }
+.payment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+.payment-option-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 6px; border-radius: 16px; background: var(--glass-bg); border: 2px solid var(--glass-border); cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); text-align: center; user-select: none; }
+.payment-option-card:hover { border-color: rgba(99,102,241,0.3); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.1); }
+.payment-option-card.active { border-color: var(--primary-light); background: rgba(99,102,241,0.08); box-shadow: 0 0 30px rgba(99,102,241,0.15), inset 0 0 20px rgba(99,102,241,0.05); }
+.payment-option-card .icon-wrap { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+.payment-option-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+.payment-option-card .pmt-label { font-size: 0.65rem; font-weight: 600; line-height: 1.2; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+.payment-option-card.active .pmt-label { color: var(--primary-light); }
+.payment-option-card .active-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary-light); opacity: 0; transform: scale(0); transition: all 0.3s; }
+.payment-option-card.active .active-dot { opacity: 1; transform: scale(1); }
+.payment-option-card .pulse-ring { position: absolute; inset: -4px; border-radius: 18px; border: 2px solid var(--primary-light); opacity: 0; animation: pulseRing 2s ease-in-out infinite; pointer-events: none; }
+.payment-option-card.active .pulse-ring { opacity: 1; }
+@keyframes pulseRing { 0% { opacity: 0.6; transform: scale(1); } 100% { opacity: 0; transform: scale(1.06); } }
+.payment-form-panel { display: none; animation: slideUp 0.4s cubic-bezier(0.4,0,0.2,1); }
+.payment-form-panel.active { display: block; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.futuristic-input { background: rgba(255,255,255,0.04) !important; border: 1px solid var(--glass-border) !important; border-radius: 12px !important; color: inherit !important; padding: 12px 16px !important; font-size: 0.95rem !important; transition: all 0.3s !important; }
+.futuristic-input:focus { border-color: var(--primary-light) !important; box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important; outline: none !important; }
+.futuristic-input::placeholder { color: var(--text-muted); opacity: 0.5; }
+.futuristic-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px; display: block; }
+.qr-container { position: relative; display: inline-flex; flex-direction: column; align-items: center; gap: 12px; }
+.qr-box { position: relative; width: 200px; height: 200px; border-radius: 20px; overflow: hidden; background: #fff; padding: 12px; box-shadow: 0 0 30px rgba(99,102,241,0.2); }
+.qr-box img { width: 100%; height: 100%; object-fit: contain; }
+.qr-glow { position: absolute; inset: -4px; border-radius: 22px; border: 2px solid transparent; background: linear-gradient(135deg, var(--primary-light), #a855f7, var(--primary-light)) border-box; -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: qrGlow 2s ease-in-out infinite; pointer-events: none; }
+@keyframes qrGlow { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+.qr-scan-line { position: absolute; top: 0; left: 12px; right: 12px; height: 2px; background: linear-gradient(90deg, transparent, var(--primary-light), transparent); animation: scanLine 2.5s ease-in-out infinite; border-radius: 2px; pointer-events: none; }
+@keyframes scanLine { 0% { top: 12px; } 50% { top: calc(100% - 12px); } 100% { top: 12px; } }
+.qr-timer { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.qr-vendors { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
+.qr-vendor-badge { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; border: 1px solid var(--glass-border); background: var(--glass-bg); }
+.payment-status { display: none; margin-top: 16px; padding: 16px 20px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); }
+.payment-status.active { display: flex; align-items: center; gap: 14px; animation: slideUp 0.4s ease; }
+.payment-status .status-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.payment-status .status-text { font-weight: 600; font-size: 0.9rem; }
+.payment-status .status-sub { font-size: 0.75rem; color: var(--text-muted); }
+.status-waiting .status-icon { background: rgba(251,191,36,0.15); color: #f59e0b; }
+.status-detected .status-icon { background: rgba(99,102,241,0.15); color: var(--primary-light); }
+.status-success .status-icon { background: rgba(34,197,94,0.15); color: var(--success); }
+.summary-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--glass-border); }
+.summary-item:last-child { border-bottom: none; }
+.summary-item .thumb { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; background: var(--glass-bg); flex-shrink: 0; }
+.success-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
+.success-overlay.active { display: flex; }
+.success-modal { background: var(--bg-card); border-radius: 24px; padding: 2.5rem; max-width: 440px; width: 100%; text-align: center; border: 1px solid var(--glass-border); box-shadow: 0 32px 64px rgba(0,0,0,0.4); animation: modalIn 0.5s cubic-bezier(0.4,0,0.2,1); }
+@keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.checkmark-anim { width: 80px; height: 80px; border-radius: 50%; background: rgba(34,197,94,0.12); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; position: relative; }
+.checkmark-anim .check-icon { font-size: 2.5rem; color: var(--success); animation: checkBounce 0.6s cubic-bezier(0.4,0,0.2,1); }
+@keyframes checkBounce { 0% { transform: scale(0); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+.checkmark-anim .check-ring { position: absolute; inset: -8px; border-radius: 50%; border: 2px solid var(--success); animation: ringExpand 1.5s ease-out infinite; }
+@keyframes ringExpand { 0% { opacity: 0.6; transform: scale(1); } 100% { opacity: 0; transform: scale(1.2); } }
+.success-modal .coupon-display { background: rgba(99,102,241,0.08); border: 2px dashed var(--primary-light); border-radius: 16px; padding: 16px; margin: 16px 0; }
+.success-modal .coupon-display code { font-size: 1.3rem; font-weight: 800; letter-spacing: 2px; color: var(--primary-light); }
+.loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9998; display: none; align-items: center; justify-content: center; }
+.loading-overlay.active { display: flex; }
+.loading-card { background: var(--bg-card); border-radius: 20px; padding: 2.5rem; text-align: center; border: 1px solid var(--glass-border); }
+.loading-spinner { width: 48px; height: 48px; border: 3px solid var(--glass-border); border-top-color: var(--primary-light); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+@media (max-width: 991.98px) {
+  .mobile-sticky-bar { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--glass-border); padding: 12px 16px; z-index: 1050; gap: 12px; align-items: center; backdrop-filter: blur(16px); }
+  .mobile-sticky-bar .msb-total { font-size: 1.1rem; font-weight: 800; }
+  .mobile-sticky-bar .msb-total small { font-size: 0.7rem; font-weight: 400; color: var(--text-muted); display: block; }
+  body { padding-bottom: 76px; }
+}
+.mobile-sticky-bar { display: none; }
+.btn-neon { position: relative; background: linear-gradient(135deg, var(--primary-light), #7c3aed); border: none; border-radius: 14px; padding: 14px 32px; font-weight: 700; font-size: 1rem; color: #fff; overflow: hidden; transition: all 0.3s; z-index: 1; }
+.btn-neon::before { content: ''; position: absolute; inset: 0; border-radius: 14px; background: linear-gradient(135deg, #7c3aed, var(--primary-light)); opacity: 0; transition: opacity 0.3s; z-index: -1; }
+.btn-neon:hover::before { opacity: 1; }
+.btn-neon:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(99,102,241,0.35); }
+.btn-neon:active { transform: translateY(0); }
+.btn-neon-sm { padding: 10px 20px; font-size: 0.85rem; border-radius: 10px; }
+.secure-badges { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+.secure-badge { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 500; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-muted); }
+.price-line { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.9rem; }
+.price-line.total { padding: 12px 0 0; margin-top: 8px; border-top: 1px solid var(--glass-border); font-size: 1.1rem; font-weight: 800; }
+.price-line.total .amount { color: var(--primary-light); font-size: 1.3rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="checkout-container container py-4">
+{% if generated_coupon %}
+<div class="success-overlay active">
+  <div class="success-modal">
+    <div class="checkmark-anim"><i class="bi bi-check-lg check-icon"></i><div class="check-ring"></div></div>
+    <h3 class="fw-bold mb-2">Order Confirmed!</h3>
+    <p class="text-muted mb-1">Order #<strong>{{ order.id }}</strong> placed successfully.</p>
+    <p class="text-muted mb-3 small">Track it from your <a href="{% url 'orders_page' %}" style="color:var(--primary-light);">orders page</a>.</p>
+    <div class="coupon-display">
+      <i class="bi bi-gift fs-4" style="color:var(--primary-light);"></i>
+      <p class="fw-bold mb-1">You Earned a Reward Coupon!</p>
+      <p class="small text-muted mb-2">15% off featured accessories</p>
+      <code>{{ generated_coupon }}</code>
+      <div class="mt-2"><button class="btn btn-neon btn-neon-sm" onclick="navigator.clipboard.writeText('{{ generated_coupon }}').then(()=>{this.textContent='Copied!'})"><i class="bi bi-clipboard me-1"></i>Copy Code</button></div>
+    </div>
+    <div class="d-flex gap-2 justify-content-center mt-3">
+      <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-house me-1"></i>Home</a>
+      <a href="{% url 'products_page' %}?featured=true" class="btn btn-neon btn-neon-sm"><i class="bi bi-lightning me-1"></i>Shop Featured</a>
+    </div>
+  </div>
+</div>
+{% elif cart_items %}
+
+<div class="progress-steps">
+  <div class="step active" id="step1"><div class="circle">1</div><div class="label">Address</div></div>
+  <div class="step" id="step2"><div class="circle">2</div><div class="label">Payment</div></div>
+  <div class="step" id="step3"><div class="circle">3</div><div class="label">Confirm</div></div>
+</div>
+
+<form method="post" id="checkoutForm">
+{% csrf_token %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="glass-card mb-4" id="step1Card">
+      <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2" style="color:var(--primary-light);"></i>Shipping Address</h5>
+      <div class="row g-3">
+        <div class="col-md-6"><label class="futuristic-label">Full Name</label><input type="text" name="full_name" class="form-control futuristic-input" placeholder="John Doe" value="{{ request.user.first_name }} {{ request.user.last_name }}" required></div>
+        <div class="col-md-6"><label class="futuristic-label">Phone Number</label><input type="tel" name="phone" class="form-control futuristic-input" placeholder="+91 98765 43210" value="{{ request.user.profile.phone|default:'' }}" required></div>
+        <div class="col-12"><label class="futuristic-label">Street Address</label><textarea name="shipping_address" class="form-control futuristic-input" rows="2" required placeholder="Building, street, landmark">{{ request.user.profile.address|default:'' }}</textarea></div>
+        <div class="col-md-4"><label class="futuristic-label">City</label><input type="text" name="city" class="form-control futuristic-input" placeholder="Mumbai" required></div>
+        <div class="col-md-4"><label class="futuristic-label">State</label><select name="state" class="form-select futuristic-input" required><option value="">Select state</option><option>Andhra Pradesh</option><option>Bihar</option><option>Delhi</option><option>Gujarat</option><option>Karnataka</option><option>Kerala</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Tamil Nadu</option><option>Uttar Pradesh</option><option>West Bengal</option></select></div>
+        <div class="col-md-4"><label class="futuristic-label">ZIP Code</label><input type="text" name="zip" class="form-control futuristic-input" placeholder="400001" required></div>
+      </div>
+      <div class="mt-3"><label class="d-flex align-items-center gap-2" style="cursor:pointer"><input type="checkbox" name="save_address" checked><span class="small text-muted">Save address for next time</span></label></div>
+    </div>
+
+    <div class="glass-card mb-4" id="step2Card" style="display:none">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-credit-card me-2" style="color:var(--primary-light);"></i>Payment Method</h5>
+        <span class="secure-badge"><i class="bi bi-shield-check"></i>Secured</span>
+      </div>
+
+      <div class="payment-grid">
+        <label class="payment-option-card" data-method="card">
+          <input type="radio" name="payment_method" value="credit_card" checked>
+          <span class="active-dot"></span><span class="pulse-ring"></span>
+          <div class="icon-wrap" style="background:rgba(99,102,241,0.12)"><i class="bi bi-credit-card-2-front" style="color:var(--primary-light)"></i></div>
+          <span class="pmt-label">Card</span>
+        </label>
+        <label class="payment-option-card" data-method="upi">
+          <input type="radio" name="payment_method" value="upi">
+          <span class="active-dot"></span><span class="pulse-ring"></span>
+          <div class="icon-wrap" style="background:rgba(168,85,247,0.12)"><i class="bi bi-phone" style="color:#a855f7"></i></div>
+          <span class="pmt-label">UPI</span>
+        </label>
+        <label class="payment-option-card" data-method="scanpay">
+          <input type="radio" name="payment_method" value="scanpay">
+          <span class="active-dot"></span><span class="pulse-ring"></span>
+          <div class="icon-wrap" style="background:rgba(34,197,94,0.12)"><i class="bi bi-qr-code" style="color:var(--success)"></i></div>
+          <span class="pmt-label">Scan &amp; Pay</span>
+        </label>
+        <label class="payment-option-card" data-method="gpay">
+          <input type="radio" name="payment_method" value="gpay">
+          <span class="active-dot"></span><span class="pulse-ring"></span>
+          <div class="icon-wrap" style="background:rgba(66,133,244,0.12)"><i class="bi bi-google" style="color:#4285f4"></i></div>
+          <span class="pmt-label">Google Pay</span>
+        </label>
+        <label class="payment-option-card" data-method="phonepe">
+          <input type="radio" name="payment_method" value="phonepe">
+          <span class="active-dot"></span><span class="pulse-ring"></span>
+          <div class="icon-wrap" style="background:rgba(85,55,200,0.12)"><i class="bi bi-phone" style="color:#673ab7"></i></div>
+          <span class="pmt-label">PhonePe</span>
+        </label>
+        <label class="payment-option-card" data-method="paytm">
+          <input type="radio" name="payment_method" value="paytm">
+          <span class="active-dot"></span><span class="pulse-ring"></span>
+          <div class="icon-wrap" style="background:rgba(0,186,242,0.12)"><i class="bi bi-wallet2" style="color:#00baf2"></i></div>
+          <span class="pmt-label">Paytm</span>
+        </label>
+        <label class="payment-option-card" data-method="netbanking">
+          <input type="radio" name="payment_method" value="netbanking">
+          <span class="active-dot"></span><span class="pulse-ring"></span>
+          <div class="icon-wrap" style="background:rgba(251,191,36,0.12)"><i class="bi bi-building" style="color:#f59e0b"></i></div>
+          <span class="pmt-label">Net Banking</span>
+        </label>
+        <label class="payment-option-card" data-method="cod">
+          <input type="radio" name="payment_method" value="cod">
+          <span class="active-dot"></span><span class="pulse-ring"></span>
+          <div class="icon-wrap" style="background:rgba(34,197,94,0.12)"><i class="bi bi-cash-stack" style="color:var(--success)"></i></div>
+          <span class="pmt-label">COD</span>
+        </label>
+        <label class="payment-option-card" data-method="paypal">
+          <input type="radio" name="payment_method" value="paypal">
+          <span class="active-dot"></span><span class="pulse-ring"></span>
+          <div class="icon-wrap" style="background:rgba(0,156,222,0.12)"><i class="bi bi-paypal" style="color:#009cde"></i></div>
+          <span class="pmt-label">PayPal</span>
+        </label>
+      </div>
+
+      <div class="payment-form-panel active" id="panel_card">
+        <div class="row g-3 mt-2">
+          <div class="col-12"><label class="futuristic-label">Cardholder Name</label><input type="text" name="card_name" class="form-control futuristic-input" placeholder="John Doe"></div>
+          <div class="col-12"><label class="futuristic-label">Card Number</label><input type="text" name="card_number" class="form-control futuristic-input" placeholder="1234 5678 9012 3456" maxlength="19" oninput="this.value=this.value.replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim()"></div>
+          <div class="col-6"><label class="futuristic-label">Expiry</label><input type="text" name="card_expiry" class="form-control futuristic-input" placeholder="MM/YY" maxlength="5" oninput="this.value=this.value.replace(/\D/g,'').replace(/^(\d{2})(\d)/,'$1/$2').trim()"></div>
+          <div class="col-6"><label class="futuristic-label">CVV</label><input type="password" name="card_cvv" class="form-control futuristic-input" placeholder="***" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+        </div>
+      </div>
+
+      <div class="payment-form-panel" id="panel_upi">
+        <div class="mt-3">
+          <label class="futuristic-label">UPI ID</label>
+          <div class="input-group"><input type="text" name="upi_id" class="form-control futuristic-input" placeholder="username@upi"><button type="button" class="btn btn-neon btn-neon-sm" onclick="verifyUPI(this)">Verify</button></div>
+          <div id="upiVerified" style="display:none;margin-top:8px"><span class="badge" style="background:rgba(34,197,94,0.12);color:var(--success);padding:8px 14px"><i class="bi bi-check-circle me-1"></i>UPI ID Verified</span></div>
+        </div>
+      </div>
+
+      <div class="payment-form-panel" id="panel_scanpay">
+        <div class="text-center mt-3">
+          <p class="fw-semibold mb-3" style="background:linear-gradient(135deg,var(--primary-light),#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.1rem">Scan &amp; Pay with your UPI App</p>
+          <div class="d-flex flex-wrap justify-content-center gap-4">
+            <div class="qr-container">
+              <div class="qr-box"><div class="qr-glow"></div><div class="qr-scan-line"></div><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#fff;border-radius:10px"><img src="https://img.icons8.com/color/48/google-pay-india.png" alt="GPay" style="width:32px;height:32px"><span style="font-size:0.55rem;color:#333;margin-top:4px">GPay</span></div></div>
+              <span class="qr-vendor-badge"><img src="https://img.icons8.com/color/48/google-pay-india.png" alt="" style="width:16px;height:16px"> Google Pay</span>
+            </div>
+            <div class="qr-container">
+              <div class="qr-box"><div class="qr-glow"></div><div class="qr-scan-line"></div><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#fff;border-radius:10px"><img src="https://img.icons8.com/color/48/phone-pe.png" alt="PhonePe" style="width:32px;height:32px"><span style="font-size:0.55rem;color:#333;margin-top:4px">PhonePe</span></div></div>
+              <span class="qr-vendor-badge"><img src="https://img.icons8.com/color/48/phone-pe.png" alt="" style="width:16px;height:16px"> PhonePe</span>
+            </div>
+            <div class="qr-container">
+              <div class="qr-box"><div class="qr-glow"></div><div class="qr-scan-line"></div><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#fff;border-radius:10px"><img src="https://img.icons8.com/color/48/paytm.png" alt="Paytm" style="width:32px;height:32px"><span style="font-size:0.55rem;color:#333;margin-top:4px">Paytm</span></div></div>
+              <span class="qr-vendor-badge"><img src="https://img.icons8.com/color/48/paytm.png" alt="" style="width:16px;height:16px"> Paytm</span>
+            </div>
+          </div>
+          <div class="d-flex justify-content-center gap-3 mt-3">
+            <span class="qr-timer"><i class="bi bi-clock"></i><span id="qrTimer">01:00</span></span>
+            <button type="button" class="btn btn-neon btn-neon-sm" onclick="refreshQR(this)"><i class="bi bi-arrow-clockwise me-1"></i>Refresh QR</button>
+          </div>
+          <div class="payment-status active" id="qrPaymentStatus">
+            <div class="status-icon" id="qrStatusIcon"><i class="bi bi-hourglass-split"></i></div>
+            <div><div class="status-text" id="qrStatusText">Waiting for payment...</div><div class="status-sub">Scan the QR code with your UPI app</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="payment-form-panel" id="panel_gpay">
+        <div class="text-center mt-3 py-3"><i class="bi bi-google" style="font-size:3rem;color:#4285f4"></i><p class="fw-bold mt-2">Redirecting to Google Pay...</p><div class="loading-spinner" style="width:32px;height:32px;margin:0 auto"></div></div>
+      </div>
+      <div class="payment-form-panel" id="panel_phonepe">
+        <div class="text-center mt-3 py-3"><i class="bi bi-phone" style="font-size:3rem;color:#673ab7"></i><p class="fw-bold mt-2">Redirecting to PhonePe...</p><div class="loading-spinner" style="width:32px;height:32px;margin:0 auto"></div></div>
+      </div>
+      <div class="payment-form-panel" id="panel_paytm">
+        <div class="text-center mt-3 py-3"><i class="bi bi-wallet2" style="font-size:3rem;color:#00baf2"></i><p class="fw-bold mt-2">Redirecting to Paytm...</p><div class="loading-spinner" style="width:32px;height:32px;margin:0 auto"></div></div>
+      </div>
+      <div class="payment-form-panel" id="panel_paypal">
+        <div class="text-center mt-3 py-3"><i class="bi bi-paypal" style="font-size:3rem;color:#009cde"></i><p class="fw-bold mt-2">Redirecting to PayPal...</p><div class="loading-spinner" style="width:32px;height:32px;margin:0 auto"></div></div>
+      </div>
+
+      <div class="payment-form-panel" id="panel_netbanking">
+        <div class="row g-3 mt-2">
+          <div class="col-12"><label class="futuristic-label">Select Bank</label><select name="bank" class="form-select futuristic-input"><option value="">Choose your bank</option><option>SBI</option><option>HDFC</option><option>ICICI</option><option>Axis</option><option>Kotak</option><option>Yes Bank</option></select></div>
+          <div class="col-12"><label class="futuristic-label">Account Holder Name</label><input type="text" name="account_holder" class="form-control futuristic-input" placeholder="As per bank records"></div>
+        </div>
+      </div>
+
+      <div class="payment-form-panel" id="panel_cod">
+        <div class="text-center mt-3 py-3">
+          <span class="badge fs-6 px-4 py-2" style="background:rgba(34,197,94,0.12);color:var(--success);border:1px solid rgba(34,197,94,0.2)"><i class="bi bi-cash-stack me-1"></i>Pay on Delivery</span>
+          <p class="text-muted small mt-2">No online payment needed. Pay when your order arrives.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card mb-4" id="step3Card" style="display:none">
+      <div class="text-center py-4">
+        <div class="checkmark-anim" style="width:64px;height:64px"><i class="bi bi-check-lg check-icon" style="font-size:2rem"></i><div class="check-ring"></div></div>
+        <h5 class="fw-bold mt-3">Ready to Place Order</h5>
+        <p class="text-muted small">Please review your order before confirming.</p>
+        <button type="submit" name="place_order" value="1" class="btn btn-neon btn-lg w-100 mt-2" id="placeOrderBtn">
+          <i class="bi bi-lock me-2"></i>Pay ₹{{ total|floatformat:2 }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="glass-card position-sticky" style="top:5.5rem">
+      <h6 class="fw-bold mb-3"><i class="bi bi-bag me-2" style="color:var(--primary-light)"></i>Your Order</h6>
+      {% for item in cart_items %}
+      <div class="summary-item">
+        <img class="thumb" src="{{ item.product.get_image_url }}" alt="{{ item.product.name }}" onerror="this.src='https://via.placeholder.com/48'">
+        <div class="flex-grow-1 min-w-0">
+          <div class="small fw-semibold text-truncate">{{ item.product.name }}</div>
+          <div class="text-muted" style="font-size:0.7rem">Qty: {{ item.quantity }}</div>
+        </div>
+        <span class="fw-bold" style="font-size:0.9rem">₹{{ item.product.price|floatformat:0 }}</span>
+      </div>
+      {% endfor %}
+      <div class="price-line"><span class="text-muted">Subtotal</span><span>₹{{ subtotal|floatformat:2 }}</span></div>
+      {% if discount > 0 %}
+      <div class="price-line"><span class="text-success">Discount</span><span class="text-success">−₹{{ discount|floatformat:2 }}</span></div>
+      {% endif %}
+      <div class="price-line"><span class="text-muted">Shipping</span><span class="text-success">Free</span></div>
+      <div class="price-line"><span class="text-muted">Tax (5%)</span><span>₹{% widthratio subtotal 100 5 %}.00</span></div>
+      <div class="price-line total"><span>Total</span><span class="amount">₹{{ total|floatformat:2 }}</span></div>
+      <div class="mt-3 pt-3" style="border-top:1px solid var(--glass-border)">
+        <form method="post" class="d-flex gap-2">
+          {% csrf_token %}
+          <input type="text" name="coupon_code" class="form-control futuristic-input" placeholder="Coupon code" value="{{ coupon_code }}" style="padding:8px 12px!important;font-size:0.8rem!important">
+          <button type="submit" name="apply_coupon" value="1" class="btn btn-neon btn-neon-sm">Apply</button>
+        </form>
+        {% if coupon_error %}<small class="text-danger mt-1 d-block">{{ coupon_error }}</small>{% endif %}
+        <div class="mt-2"><small class="text-muted">Try: <span class="badge bg-dark">WELCOME10</span> <span class="badge bg-dark">SAVE50</span></small></div>
+      </div>
+      <div class="secure-badges">
+        <span class="secure-badge"><i class="bi bi-shield-check"></i>256-bit SSL</span>
+        <span class="secure-badge"><i class="bi bi-lock"></i>Secure</span>
+        <span class="secure-badge"><i class="bi bi-arrow-return-left"></i>30-day returns</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between mt-4">
+  <button type="button" class="btn btn-outline-light btn-neon-sm" id="prevStepBtn" style="display:none" onclick="prevStep()"><i class="bi bi-arrow-left me-1"></i>Back</button>
+  <button type="button" class="btn btn-neon" id="nextStepBtn" onclick="nextStep()">Continue to Payment <i class="bi bi-arrow-right ms-1"></i></button>
+</div>
+</form>
+
+<div class="mobile-sticky-bar">
+  <div class="msb-total">₹{{ total|floatformat:2 }} <small>Total</small></div>
+  <button class="btn btn-neon flex-grow-1" onclick="document.getElementById('placeOrderBtn').click()"><i class="bi bi-lock me-1"></i>Place Order</button>
+</div>
+
+<div class="loading-overlay" id="processingOverlay">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <h6 class="fw-bold mt-3">Processing Payment...</h6>
+    <div class="small text-muted">Please don't close this page</div>
+  </div>
+</div>
+
+{% else %}
+<div class="text-center py-5">
+  <i class="bi bi-cart-x" style="font-size:4rem;color:var(--text-muted)"></i>
+  <h4 class="fw-bold mt-3">Your cart is empty</h4>
+  <p class="text-muted">Add some items before checking out.</p>
+  <a href="{% url 'products_page' %}" class="btn btn-neon"><i class="bi bi-bag me-1"></i>Shop Now</a>
+</div>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentStep = 1;
+const totalSteps = 3;
+let qrInterval, qrTimeLeft = 60;
+let paymentStatusInterval;
+
+function updateSteps() {
+  for (let i = 1; i <= totalSteps; i++) {
+    const el = document.getElementById('step' + i);
+    el.className = 'step';
+    if (i === currentStep) el.classList.add('active');
+    else if (i < currentStep) el.classList.add('done');
+  }
+  document.getElementById('step1Card').style.display = currentStep === 1 ? 'block' : 'none';
+  document.getElementById('step2Card').style.display = currentStep === 2 ? 'block' : 'none';
+  document.getElementById('step3Card').style.display = currentStep === 3 ? 'block' : 'none';
+  document.getElementById('prevStepBtn').style.display = currentStep > 1 ? 'inline-block' : 'none';
+  const nextBtn = document.getElementById('nextStepBtn');
+  if (currentStep === 1) { nextBtn.innerHTML = 'Continue to Payment <i class="bi bi-arrow-right ms-1"></i>'; nextBtn.style.display = ''; }
+  else if (currentStep === 2) { nextBtn.innerHTML = 'Review Order <i class="bi bi-arrow-right ms-1"></i>'; nextBtn.style.display = ''; }
+  else { nextBtn.style.display = 'none'; }
+}
+
+function nextStep() {
+  if (currentStep === 1) {
+    const addr = document.querySelector('[name="shipping_address"]');
+    if (!addr.value.trim()) { addr.focus(); addr.style.borderColor = '#ef4444!important'; return; }
+  }
+  if (currentStep < totalSteps) { currentStep++; updateSteps(); }
+}
+function prevStep() { if (currentStep > 1) { currentStep--; updateSteps(); } }
+
+document.querySelectorAll('.payment-option-card').forEach(function(card) {
+  card.addEventListener('click', function() {
+    document.querySelectorAll('.payment-option-card').forEach(function(c) {
+      c.classList.remove('active');
+    });
+    document.querySelectorAll('.payment-form-panel').forEach(function(p) { p.classList.remove('active'); });
+    this.classList.add('active');
+    this.querySelector('input[type="radio"]').checked = true;
+    const method = this.dataset.method;
+    const panel = document.getElementById('panel_' + method);
+    if (panel) { panel.classList.add('active'); }
+    if (method === 'scanpay') startQRPayment();
+    else { clearInterval(qrInterval); clearInterval(paymentStatusInterval); }
+  });
+});
+
+document.querySelector('.payment-option-card[data-method="card"]').classList.add('active');
+
+function verifyUPI(btn) {
+  const input = btn.previousElementSibling;
+  if (!input.value.includes('@')) { input.style.borderColor = '#ef4444'; return; }
+  input.style.borderColor = '';
+  btn.disabled = true; btn.innerHTML = '<span class="loading-spinner" style="width:16px;height:16px;margin:0;display:inline-block"></span>';
+  setTimeout(function() {
+    btn.style.display = 'none';
+    document.getElementById('upiVerified').style.display = 'block';
+  }, 1500);
+}
+
+function startQRPayment() {
+  qrTimeLeft = 60;
+  document.getElementById('qrTimer').textContent = '01:00';
+  document.getElementById('qrPaymentStatus').className = 'payment-status active status-waiting';
+  document.getElementById('qrStatusIcon').innerHTML = '<i class="bi bi-hourglass-split"></i>';
+  document.getElementById('qrStatusText').textContent = 'Waiting for payment...';
+  clearInterval(qrInterval); clearInterval(paymentStatusInterval);
+  qrInterval = setInterval(function() {
+    qrTimeLeft--;
+    const m = String(Math.floor(qrTimeLeft / 60)).padStart(2, '0');
+    const s = String(qrTimeLeft % 60).padStart(2, '0');
+    document.getElementById('qrTimer').textContent = m + ':' + s;
+    if (qrTimeLeft <= 10) document.getElementById('qrTimer').style.color = '#ef4444';
+    if (qrTimeLeft <= 0) { clearInterval(qrInterval); document.getElementById('qrTimer').textContent = 'Expired'; }
+  }, 1000);
+  setTimeout(function() {
+    document.getElementById('qrPaymentStatus').className = 'payment-status active status-detected';
+    document.getElementById('qrStatusIcon').innerHTML = '<i class="bi bi-wifi"></i>';
+    document.getElementById('qrStatusText').textContent = 'Payment detected...';
+  }, 4000);
+  setTimeout(function() {
+    document.getElementById('qrPaymentStatus').className = 'payment-status active';
+    document.getElementById('qrStatusIcon').innerHTML = '<i class="bi bi-arrow-repeat"></i>';
+    document.getElementById('qrStatusText').textContent = 'Verifying...';
+  }, 7000);
+  setTimeout(function() {
+    document.getElementById('qrPaymentStatus').className = 'payment-status active status-success';
+    document.getElementById('qrStatusIcon').innerHTML = '<i class="bi bi-check-circle"></i>';
+    document.getElementById('qrStatusText').textContent = 'Payment successful!';
+    document.getElementById('qrStatusText').style.color = 'var(--success)';
+    clearInterval(qrInterval);
+  }, 10000);
+}
+
+function refreshQR(btn) {
+  const icon = btn.querySelector('i');
+  icon.style.animation = 'spin 0.6s linear';
+  setTimeout(function() { icon.style.animation = ''; startQRPayment(); }, 600);
+}
+
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+  const method = document.querySelector('input[name="payment_method"]:checked');
+  if (method && (method.value === 'credit_card' || method.value === 'debit_card')) {
+    const cvv = document.querySelector('[name="card_cvv"]');
+    if (cvv.value.length < 3) { e.preventDefault(); cvv.focus(); cvv.style.borderColor = '#ef4444'; return; }
+  }
+  document.getElementById('processingOverlay').classList.add('active');
+});
+</script>
+{% endblock %}

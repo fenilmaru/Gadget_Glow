@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}All Products - Gadget Glow{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+        <div>
+            <h1 class="fw-bold mb-1">All Products</h1>
+            <p class="text-muted mb-0">{{ products|length }} products found</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-outline-glow btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-funnel"></i> Sort: {{ request.GET.sort|default:"Default"|title }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark">
+                    <li><a class="dropdown-item" href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{ k }}={{ v }}&{% endif %}{% endfor %}sort=">Default</a></li>
+                    <li><a class="dropdown-item" href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{ k }}={{ v }}&{% endif %}{% endfor %}sort=price_low">Price: Low to High</a></li>
+                    <li><a class="dropdown-item" href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{ k }}={{ v }}&{% endif %}{% endfor %}sort=price_high">Price: High to Low</a></li>
+                    <li><a class="dropdown-item" href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{ k }}={{ v }}&{% endif %}{% endfor %}sort=newest">Newest First</a></li>
+                    <li><a class="dropdown-item" href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{ k }}={{ v }}&{% endif %}{% endfor %}sort=rating">Top Rated</a></li>
+                    <li><a class="dropdown-item" href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{ k }}={{ v }}&{% endif %}{% endfor %}sort=name">Name A-Z</a></li>
+                </ul>
+            </div>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-glow active" id="gridView" title="Grid View"><i class="bi bi-grid-3x3-gap"></i></button>
+                <button class="btn btn-outline-glow" id="listView" title="List View"><i class="bi bi-list"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="rounded-3 p-3 mb-4" style="background:var(--bg-card);border:1px solid var(--border)">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Search products..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Category</label>
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Min Rating</label>
+                <select name="rating" class="form-select">
+                    <option value="">Any</option>
+                    <option value="4" {% if request.GET.rating == '4' %}selected{% endif %}>4★ &amp; up</option>
+                    <option value="3" {% if request.GET.rating == '3' %}selected{% endif %}>3★ &amp; up</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-gradient btn-sm flex-grow-1"><i class="bi bi-search me-1"></i>Filter</button>
+                <a href="{% url 'products_page' %}" class="btn btn-outline-glow btn-sm" title="Clear Filters"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </form>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="filter-section">
+                <h5><i class="bi bi-sliders me-2"></i>Filters</h5>
+                <form method="get" id="filterForm">
+                    {% if search_query %}<input type="hidden" name="search" value="{{ search_query }}">{% endif %}
+                    <div class="filter-group">
+                        <h6>Category</h6>
+                        <div class="d-flex flex-column gap-1">
+                            <label><input type="radio" name="category" value="" {% if not selected_category %}checked{% endif %} onchange="this.form.submit()"> All Categories</label>
+                            {% for cat in categories %}
+                            <label><input type="radio" name="category" value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}checked{% endif %} onchange="this.form.submit()"> {{ cat.name }}</label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <h6>Price Range</h6>
+                        <div class="d-flex gap-2 align-items-center">
+                            <input type="number" name="min_price" class="form-control form-control-sm" placeholder="Min" value="{{ request.GET.min_price }}" style="width: 80px;">
+                            <span class="text-muted">-</span>
+                            <input type="number" name="max_price" class="form-control form-control-sm" placeholder="Max" value="{{ request.GET.max_price }}" style="width: 80px;">
+                            <button type="submit" class="btn btn-sm btn-gradient"><i class="bi bi-arrow-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <h6>Availability</h6>
+                        <label><input type="checkbox" name="in_stock" value="1" {% if request.GET.in_stock %}checked{% endif %} onchange="this.form.submit()"> In Stock Only</label>
+                    </div>
+                    <div class="filter-group">
+                        <h6>Minimum Rating</h6>
+                        <label><input type="radio" name="rating" value="4" {% if request.GET.rating == '4' %}checked{% endif %} onchange="this.form.submit()"> 4★ &amp; above</label>
+                        <label><input type="radio" name="rating" value="3" {% if request.GET.rating == '3' %}checked{% endif %} onchange="this.form.submit()"> 3★ &amp; above</label>
+                        <label><input type="radio" name="rating" value="" {% if not request.GET.rating %}checked{% endif %} onchange="this.form.submit()"> All Ratings</label>
+                    </div>
+                    <button type="submit" class="btn btn-gradient w-100">Apply Filters</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-9">
+            <div class="row g-3" id="productGrid">
+                {% for product in products %}
+                <div class="col-6 col-md-4 col-lg-4 product-item">
+                    <div class="product-card fade-in-up">
+                        <div class="card-img-container">
+                            <a href="{% url 'product_detail' product.slug %}">
+                                {% if product.brand %}
+                                <div class="brand-logo-overlay"><span style="font-size: 0.6rem; font-weight: 700; color: var(--primary);">{{ product.brand.name|first }}</span></div>
+                                {% endif %}
+                                <img src="{{ product.display_image_url }}" alt="{{ product.name }}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=400&fit=crop'">
+                            </a>
+                            <div class="card-img-overlay-badges">
+                                {% if product.discount_percentage > 0 %}<span class="badge-discount">-{{ product.discount_percentage }}%</span>{% endif %}
+                                {% if product.is_featured %}<span class="badge-featured">Featured</span>{% endif %}
+                            </div>
+                            <button class="wishlist-btn" data-product-id="{{ product.id }}" title="Add to Wishlist"><i class="bi bi-heart"></i></button>
+                            {% if not product.in_stock %}<div class="out-of-stock-overlay"><span>Out of Stock</span></div>{% endif %}
+                        </div>
+                        <div class="card-body">
+                            {% if product.category %}<div class="card-category-name">{{ product.category.name }}</div>{% endif %}
+                            <h6 class="card-title"><a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a></h6>
+                            <div class="card-rating">
+                                <span class="stars">{% for i in "12345"|make_list %}{% if forloop.counter <= product.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                                <span class="rating-num">{{ product.rating }}</span>
+                                <span class="review-count">({{ product.total_reviews }})</span>
+                            </div>
+                            <div class="card-pricing">
+                                <span class="current-price">₹{{ product.price }}</span>
+                                {% if product.compare_price %}<span class="compare-price">₹{{ product.compare_price }}</span>{% endif %}
+                                {% if product.discount_percentage > 0 %}<span class="discount-tag">-{{ product.discount_percentage }}%</span>{% endif %}
+                            </div>
+                            <div class="card-actions">
+                                {% if product.in_stock %}
+                                <form method="post" action="{% url 'cart_page' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <input type="hidden" name="action" value="add">
+                                    <button type="submit" class="btn-add-cart"><i class="bi bi-cart-plus"></i> Add</button>
+                                </form>
+                                {% endif %}
+                                <a href="{% url 'product_detail' product.slug %}" class="btn-outline-cart" title="Quick View"><i class="bi bi-eye"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-search" style="font-size: 3rem; color: var(--text-muted);"></i>
+                    <h4 class="mt-3">No products found</h4>
+                    <p class="text-muted">Try adjusting your filters or search query.</p>
+                    <a href="{% url 'products_page' %}" class="btn btn-gradient mt-2">Clear Filters</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var observer = new IntersectionObserver(function(e) {
+            e.forEach(function(entry) {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.08 });
+        document.querySelectorAll('.fade-in-up').forEach(function(el) { observer.observe(el); });
+
+        var gridView = document.getElementById('gridView');
+        var listView = document.getElementById('listView');
+        var productGrid = document.getElementById('productGrid');
+        if (gridView && listView && productGrid) {
+            gridView.addEventListener('click', function() {
+                gridView.classList.add('active'); listView.classList.remove('active');
+                productGrid.className = 'row g-3';
+                document.querySelectorAll('.product-item').forEach(function(el) {
+                    el.className = 'col-6 col-md-4 col-lg-4 product-item';
+                    var card = el.querySelector('.product-card');
+                    if (card) { card.style.display = ''; card.style.flexDirection = ''; }
+                    var imgContainer = el.querySelector('.card-img-container');
+                    if (imgContainer) { imgContainer.style.minWidth = ''; imgContainer.style.paddingTop = ''; }
+                });
+            });
+            listView.addEventListener('click', function() {
+                listView.classList.add('active'); gridView.classList.remove('active');
+                productGrid.className = 'row g-3';
+                document.querySelectorAll('.product-item').forEach(function(el) {
+                    el.className = 'col-12 product-item';
+                    var card = el.querySelector('.product-card');
+                    if (card) { card.style.display = 'flex'; card.style.flexDirection = 'row'; }
+                    var imgContainer = el.querySelector('.card-img-container');
+                    if (imgContainer) { imgContainer.style.minWidth = '200px'; imgContainer.style.paddingTop = '200px'; }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

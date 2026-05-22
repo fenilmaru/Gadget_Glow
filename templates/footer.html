@@ -1,0 +1,50 @@
+<footer class="footer-gadget">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-lightning-charge-fill" style="color: var(--primary-light); font-size: 1.5rem;"></i>
+                    <span class="fw-bold fs-5 gradient-text">Gadget Glow</span>
+                </div>
+                <p class="text-muted small">Premium mobile accessories store powered by AI. Get the best gadgets at unbeatable prices with lightning-fast delivery.</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                </div>
+            </div>
+            <div class="col-6 col-lg-2">
+                <h5>Shop</h5>
+                <a href="{% url 'products_page' %}">All Products</a>
+                <a href="{% url 'products_page' %}?sort=newest">New Arrivals</a>
+                <a href="{% url 'products_page' %}?sort=rating">Best Sellers</a>
+                <a href="{% url 'products_page' %}?sort=price_low">Under ₹50</a>
+            </div>
+            <div class="col-6 col-lg-2">
+                <h5>Support</h5>
+                <a href="#">Contact Us</a>
+                <a href="#">FAQ</a>
+                <a href="#">Shipping Info</a>
+                <a href="#">Returns & Exchanges</a>
+            </div>
+            <div class="col-6 col-lg-2">
+                <h5>Company</h5>
+                <a href="#">About Us</a>
+                <a href="#">Careers</a>
+                <a href="#">Press Kit</a>
+                <a href="#">Blog</a>
+            </div>
+            <div class="col-6 col-lg-2">
+                <h5>Legal</h5>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Refund Policy</a>
+                <a href="#">Cookie Policy</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; {% now "Y" %} Gadget Glow. All rights reserved. Powered by Django &amp; AI.</p>
+        </div>
+    </div>
+</footer>
