@@ -11,6 +11,12 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-change-me-in-produc
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://gadget-glow.onrender.com'
+]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -56,6 +62,8 @@ MIDDLEWARE = [
     'Gadget_Glow.middleware.SecurityHeadersMiddleware',
     'Gadget_Glow.middleware.AuditLogMiddleware',
     'Gadget_Glow.middleware.RateLimitMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'Gadget_Glow.urls'
