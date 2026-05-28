@@ -139,6 +139,11 @@ class Command(BaseCommand):
 
         self.stdout.write('Product images use Unsplash URLs via get_display_image()')
 
+        # Ensure all existing users have profiles and carts
+        for user in User.objects.all():
+            UserProfile.objects.get_or_create(user=user)
+            Cart.objects.get_or_create(user=user)
+
         # Admin user
         if not User.objects.filter(username='admin').exists():
             User.objects.create_superuser('admin', 'admin@gadgetglow.com', 'admin123')

@@ -281,7 +281,7 @@ def wishlist_page(request):
 
 @login_required
 def profile_page(request):
-    profile = request.user.profile
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
     orders = Order.objects.filter(user=request.user).order_by('-created_at')[:5]
     if request.method == 'POST':
         first_name = request.POST.get('first_name', '')

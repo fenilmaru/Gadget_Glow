@@ -7597,3 +7597,4 @@ INFO 2026-05-15 16:34:07,757 basehttp 18756 18820 "GET /login/ HTTP/1.1" 200 886
 INFO 2026-05-15 16:34:12,890 middleware 18756 18820 AUDIT: user=admin method=POST path=/login/ status=302 duration=1.70s ip=127.0.0.1
 INFO 2026-05-15 16:34:12,892 basehttp 18756 18820 "POST /login/ HTTP/1.1" 302 0
 INFO 2026-05-15 16:34:13,001 basehttp 18756 18820 "GET /dashboard/ HTTP/1.1" 200 32210
+INFO 2026-05-22 15:34:25,092 autoreload 21376 12520 Watching for file changes with StatReloader
