@@ -6,7 +6,6 @@ from cart.models import Cart
 
 
 @receiver(post_save, sender=User)
-def create_user_profile_and_cart(sender, instance, created, **kwargs):
+def create_cart(sender, instance, created, **kwargs):
     if created:
-        UserProfile.objects.get_or_create(user=instance)
         Cart.objects.get_or_create(user=instance)

@@ -64,15 +64,23 @@ def user_register(request):
             error = 'Password must be at least 8 characters'
         else:
             user = User.objects.create_user(
-                username=username, email=email, password=password,
-                first_name=first_name, last_name=last_name,
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
             )
+
             if role == 'admin':
                 user.is_staff = True
                 user.is_superuser = True
                 user.save()
-            UserProfile.objects.create(user=user, phone=phone)
-            Cart.objects.create(user=user)
+
+            # Profile is already created by signal
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            profile.phone = phone
+            profile.save()
+
             auth_login(request, user)
             return redirect('home') if not user.is_staff else redirect('admin_dashboard')
     return render(request, 'register.html', {'error': error})
