@@ -57,10 +57,20 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         phone = validated_data.pop('phone', '')
         password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
-        UserProfile.objects.create(user=user, phone=phone)
+
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data.get('email', ''),
+            password=password,
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', '')
+        )
+
+        # Profile is already created by signal
+        profile = user.userprofile
+        profile.phone = phone
+        profile.save()
+
         return user
 
 
@@ -100,8 +110,16 @@ class WishlistSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        from products.models import Product
+
         user = self.context['request'].user
         product_id = validated_data['product_id']
+
         product = Product.objects.get(id=product_id)
-        wishlist, created = Wishlist.objects.get_or_create(user=user, product=product)
+
+        wishlist, created = Wishlist.objects.get_or_create(
+            user=user,
+            product=product
+        )
+
         return wishlist
